@@ -1,0 +1,35 @@
+ #!/usr/bin/env bash
+set -e
+
+VM_NAME="GamingVM"
+RAM="32G"
+VCPUS="16"
+DISK="/var/lib/libvirt/images/gaming-vm.qcow2"
+DISK_SIZE="1T"
+ISO="/var/lib/libvirt/boot/Win11.iso"
+
+echo "== Criando disco virtual =="
+
+qemu-img create -f qcow2 "$DISK" "$DISK_SIZE"
+
+echo "== Instalando máquina virtual =="
+
+virt-install \
+  --name "$VM_NAME" \
+  --memory "$RAM" \
+  --vcpus "$VCPUS" \
+  --cpu host-passthrough \
+  --machine q35 \
+  --boot uefi \
+  --disk path="$DISK",format=qcow2,bus=virtio,cache=none,discard=unmap \
+  --cdrom "$ISO" \
+  --network network=default,model=virtio \
+  --graphics none \
+  --video none \
+  --os-variant win11 \
+  --features \
+    acpi=on,apic=on \
+  --tpm backend.type=emulator,backend.version=2.0,model=tpm-crb \
+  --noautoconsole
+
+echo "VM criada."
